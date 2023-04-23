@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jtlshopplugin>
+    <Name>Landswitcher</Name>
+    <Description>Landswitcher</Description>
+    <Author>Max</Author>
+    <URL>https://www.jtl-software.de</URL>
+    <XMLVersion>100</XMLVersion>
+    <ShopVersion>5.1.2</ShopVersion>
+    <Icon>preview.png</Icon>
+    <PluginID>jtl_landswitcher</PluginID>
+    <CreateDate>2023-04-24</CreateDate>
+    <Version>1.0.0</Version>
+    <Install>
+        <FlushTags>CACHING_GROUP_CATEGORY, CACHING_GROUP_ARTICLE</FlushTags>
+        <Adminmenu>
+        <Customlink sort="1">
+                <Name>Main</Name>
+            </Customlink>
+         <Customlink sort="2">
+             <Name>Test tab</Name>
+             <Filename>stats.php</Filename>
+         </Customlink>
+        </Adminmenu>
+    </Install>
+</jtlshopplugin>
