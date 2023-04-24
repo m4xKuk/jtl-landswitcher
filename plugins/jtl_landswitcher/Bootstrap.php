@@ -75,17 +75,22 @@ class Bootstrap extends Bootstrapper
       }
 
       if (Form::validateToken() && ($id = Request::postVar('id')) && ($url = Request::postVar('redirect_url')) && Request::postVar('edit') == 'edit') {
-
-        $model = ModelRed::load(['id' => $id], $this->getDB());
-        $url_esc = $this->escUrl($url);
-        if ($model && mb_strlen($url_esc) > 0) {
-          $model->setUrl($url);
-          $model->save();
-          $objects = $this->getMainObjects();
-          $alert->addAlert(Alert::TYPE_SUCCESS, \__('Updated'), 'Error');
-        } else {
-          $alert->addAlert(Alert::TYPE_ERROR, \__('Update error'), 'Error');
+        try{
+          $model = ModelRed::load(['id' => $id], $this->getDB());
+          $url_esc = $this->escUrl($url);
+          if ($model && mb_strlen($url_esc) > 0) {
+            $model->setUrl($url);
+            $model->save();
+            $objects = $this->getMainObjects();
+            $alert->addAlert(Alert::TYPE_SUCCESS, \__('Updated'), 'Error');
+          } else {
+            $alert->addAlert(Alert::TYPE_ERROR, \__('Update error'), 'Error');
+          }
+        } catch (\Exception $e) {
+          $alert->addAlert(Alert::TYPE_ERROR, $e->getMessage(), 'Error');
         }
+
+
       }
 
       return $smarty->assign(
