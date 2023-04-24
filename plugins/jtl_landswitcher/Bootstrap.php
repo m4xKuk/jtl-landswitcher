@@ -32,23 +32,22 @@ class Bootstrap extends Bootstrapper
     $this->lang = (mb_convert_case(Shop::getLanguageCode(), MB_CASE_LOWER) === 'ger') ? 'cDeutsch' : 'cEnglisch';
     $alert = Shop::Container()->getAlertService();
 
+    $service = new Service($this->getDB(), $this->lang);
+
     if ($tabName == 'Main' && Shop::isAdmin(true)) {
 
-      $cities = $this->getCities();
-      $objects = $this->getMainObjects();
+      $cities = $service->getCities();
+      $objects = $service->getMainObjects();
 
 
       if (($url = Request::postVar('redirect_url')) && ($cISO = Request::postVar('cities')) && Request::postVar('add') == 1 && Form::validateToken()) {
 
-        if (!empty($city = $this->getCity($cISO)) && !in_array($city->cISO, array_column($objects, 'cISO'))) {
+        if (!empty($city = $service->getCity($cISO)) && !in_array($city->cISO, array_column($objects, 'cISO'))) {
           
-          $url_esc = $this->escUrl($url);
+          $url_esc = $service->escUrl($url);
           if(mb_strlen($url_esc) > 0) {
-            ModelRed::create([
-              'tland_cISO' => $city->cISO,
-              'url' => $url_esc,
-            ], $this->getDB());
-            $objects = $this->getMainObjects();
+            $service->createRow($city->cISO, $url_esc);
+            $objects = $service->getMainObjects();
           }else{
             $alert->addAlert(Alert::TYPE_ERROR, \__('Url error'), 'Error');
           }
@@ -59,10 +58,8 @@ class Bootstrap extends Bootstrapper
       }
 
       if (Request::isAjaxRequest() && ($id = Request::postVar('id')) && Request::postVar('action') == 'delete') {
-        $model = ModelRed::load(['id' => $id], $this->getDB());
-        if ($model) {
-          $result = $model->delete();
-        }
+        
+        $result = $service->deleteRow($id);
 
         if (isset($result)) {
           $message = [
@@ -75,22 +72,8 @@ class Bootstrap extends Bootstrapper
       }
 
       if (Form::validateToken() && ($id = Request::postVar('id')) && ($url = Request::postVar('redirect_url')) && Request::postVar('edit') == 'edit') {
-        try{
-          $model = ModelRed::load(['id' => $id], $this->getDB());
-          $url_esc = $this->escUrl($url);
-          if ($model && mb_strlen($url_esc) > 0) {
-            $model->setUrl($url);
-            $model->save();
-            $objects = $this->getMainObjects();
-            $alert->addAlert(Alert::TYPE_SUCCESS, \__('Updated'), 'Error');
-          } else {
-            $alert->addAlert(Alert::TYPE_ERROR, \__('Update error'), 'Error');
-          }
-        } catch (\Exception $e) {
-          $alert->addAlert(Alert::TYPE_ERROR, $e->getMessage(), 'Error');
-        }
-
-
+        $service->editRow($id, $url, $alert);
+        $objects = $service->getMainObjects();
       }
 
       return $smarty->assign(
@@ -111,39 +94,4 @@ class Bootstrap extends Bootstrapper
     parent::boot($dispatcher);
   }
 
-  private function getCities()
-  {
-    return
-      $this->getDB()->getObjects("
-      SELECT
-        cISO, $this->lang as name
-        FROM tland
-    ");
-  }
-
-  private function getMainObjects()
-  {
-    return $this->getDB()->getArrays("
-      SELECT
-        tland.cISO, tr.url, tland.$this->lang as name, tr.id 
-        FROM jtl_test_redirect as tr 
-        INNER JOIN tland 
-        ON tland.cISO = tr.tland_cISO
-    ");
-  }
-
-  private function getCity($cISO)
-  {
-    return $this->getDB()->getSingleObject("
-      SELECT *
-        FROM tland 
-        WHERE cISO = :cISO",
-      ['cISO' => $cISO]
-    );
-  }
-
-  private function escUrl($url)
-  {
-    return ($this->getDB()->escape(Text::htmlspecialchars(Text::filterURL(strip_tags(trim($url))))));
-  }
 }
