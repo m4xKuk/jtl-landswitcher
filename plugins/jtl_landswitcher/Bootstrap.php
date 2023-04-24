@@ -11,6 +11,7 @@ use JTL\Events\Dispatcher;
 use JTL\Helpers\Form;
 use JTL\Shop;
 use JTL\Helpers\Request;
+use JTL\Helpers\Text;
 use Plugin\jtl_landswitcher\models\ModelRed;
 
 /**
@@ -26,7 +27,6 @@ class Bootstrap extends Bootstrapper
    */
   public function renderAdminMenuTab(string $tabName, int $menuID, JTLSmarty $smarty): string
   {
-
     $plugin   = $this->getPlugin();
     $template = 'add.tpl';
     $this->lang = (mb_convert_case(Shop::getLanguageCode(), MB_CASE_LOWER) === 'ger') ? 'cDeutsch' : 'cEnglisch';
@@ -39,12 +39,20 @@ class Bootstrap extends Bootstrapper
 
 
       if (($url = Request::postVar('redirect_url')) && ($cISO = Request::postVar('cities')) && Request::postVar('add') == 1 && Form::validateToken()) {
+
         if (!empty($city = $this->getCity($cISO)) && !in_array($city->cISO, array_column($objects, 'cISO'))) {
-          ModelRed::create([
-            'tland_cISO' => $city->cISO,
-            'url' => $url,
-          ], $this->getDB());
-          $objects = $this->getMainObjects();
+          
+          $url_esc = $this->escUrl($url);
+          if(mb_strlen($url_esc) > 0) {
+            ModelRed::create([
+              'tland_cISO' => $city->cISO,
+              'url' => $url_esc,
+            ], $this->getDB());
+            $objects = $this->getMainObjects();
+          }else{
+            $alert->addAlert(Alert::TYPE_ERROR, \__('Url error'), 'Error');
+          }
+          
         } else {
           $alert->addAlert(Alert::TYPE_ERROR, \__('Redirect already exist'), 'Error');
         }
@@ -69,7 +77,8 @@ class Bootstrap extends Bootstrapper
       if (Form::validateToken() && ($id = Request::postVar('id')) && ($url = Request::postVar('redirect_url')) && Request::postVar('edit') == 'edit') {
 
         $model = ModelRed::load(['id' => $id], $this->getDB());
-        if ($model) {
+        $url_esc = $this->escUrl($url);
+        if ($model && mb_strlen($url_esc) > 0) {
           $model->setUrl($url);
           $model->save();
           $objects = $this->getMainObjects();
@@ -126,5 +135,10 @@ class Bootstrap extends Bootstrapper
         WHERE cISO = :cISO",
       ['cISO' => $cISO]
     );
+  }
+
+  private function escUrl($url)
+  {
+    return ($this->getDB()->escape(Text::htmlspecialchars(Text::filterURL(strip_tags(trim($url))))));
   }
 }
