@@ -1,6 +1,6 @@
 <form method="post" class="w-25">
   {$jtl_token}
-  <input type="hidden" name="kPluginAdminMenu" value="{$menuID}">
+  <!-- <input type="hidden" name="kPluginAdminMenu" value="{$menuID}"> -->
   <div class="form-group">
     <label for="exampleInputPassword1">Url</label>
     <input class="form-control" id="exampleInputPassword1" required type="url" name="redirect_url" value="" />
@@ -33,7 +33,7 @@
       <span>{$foo.url|escape:'html'}</span>
       <form method="post" style="display: none;">
         {$jtl_token}
-        <input type="hidden" name="kPluginAdminMenu" value="{$menuID}">
+        <!-- <input type="hidden" name="kPluginAdminMenu" value="{$menuID}"> -->
         <input type="hidden" name="id" value="{$foo.id}">
         <div class="form-group">
           <input class="form-control" id="" required type="url" name="redirect_url" value="{$foo.url|escape:'html'}" />
