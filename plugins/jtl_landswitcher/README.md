@@ -1,3 +1,3 @@
 ## README.md
 
-Landswitcher
+Landswitcher. Test plugin for JTL shop
